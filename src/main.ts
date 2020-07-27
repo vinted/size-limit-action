@@ -43,6 +43,9 @@ async function run() {
     const token = getInput("github_token");
     const skipStep = getInput("skip_step");
     const buildScript = getInput("build_script");
+    const basePath = getInput("base_path");
+    const headPath = getInput("head_path");
+    const runScript = getInput("run_script");
     const octokit = new GitHub(token);
     const term = new Term();
     const limit = new SizeLimit();
@@ -50,12 +53,16 @@ async function run() {
     const { status, output } = await term.execSizeLimit(
       null,
       skipStep,
-      buildScript
+      buildScript,
+      headPath,
+      runScript
     );
     const { output: baseOutput } = await term.execSizeLimit(
       pr.base.ref,
       null,
-      buildScript
+      buildScript,
+      basePath,
+      runScript
     );
 
     let base;
