@@ -43,19 +43,26 @@ async function run() {
     const token = getInput("github_token");
     const skipStep = getInput("skip_step");
     const buildScript = getInput("build_script");
+    const baseSizePath = getInput("base_size_path");
+    const headSizePath = getInput("head_size_path");
     const octokit = new GitHub(token);
     const term = new Term();
     const limit = new SizeLimit();
 
-    const { status, output } = await term.execSizeLimit(
-      null,
-      skipStep,
-      buildScript
+    const { status, output } = await term.getSizeLimit(
+      {
+        skipStep,
+        buildScript
+      },
+      headSizePath
     );
-    const { output: baseOutput } = await term.execSizeLimit(
-      pr.base.ref,
-      null,
-      buildScript
+
+    const { output: baseOutput } = await term.getSizeLimit(
+      {
+        branch: pr.base.ref,
+        buildScript
+      },
+      baseSizePath
     );
 
     let base;
@@ -106,7 +113,10 @@ async function run() {
       }
     }
 
-    if (status > 0) {
+    const withinLimit = Object.values(current).every(
+      ({ passed }) => passed ?? true
+    );
+    if (status > 0 || !withinLimit) {
       setFailed("Size limit has been exceeded.");
     }
   } catch (error) {
